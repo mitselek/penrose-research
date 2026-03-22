@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penrose P3 Tiling</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0e18;overflow:hidden;width:100vw;height:100vh;font-family:'Courier New',monospace}
+svg{display:block;width:100%;height:100%}
+g[data-idx]{cursor:pointer}
+</style>
+</head>
+<body>
+<svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="penrose.js"></script>
+<script>
+const ns = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('svg');
+const W = window.innerWidth, H = window.innerHeight;
+svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+// Glow filter for arcs
+const defs = document.createElementNS(ns, 'defs');
+defs.innerHTML = `
+  <filter id="glow">
+    <feGaussianBlur stdDeviation="3" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>`;
+svg.appendChild(defs);
+
+const mainS = Math.min(W, H) * 0.35;
+const mcx = W / 2, mcy = H * 0.5;
+
+// ================================================================
+// Rendering helpers
+// ================================================================
+function rhombScr(r) {
+  return [r.v0, r.v1, r.v2, r.v3].map(p => [mcx + p[0] * mainS, mcy + p[1] * mainS]);
+}
+
+const arcs = []; // all arc data for signal system
+
+function drawRhomb(r, colors, strokeWidth, rhombIdx) {
+  const q = rhombScr(r);
+  const g = document.createElementNS(ns, 'g');
+  g.style.cursor = 'pointer';
+  g.dataset.idx = rhombIdx;
+
+  // Polygon
+  const poly = document.createElementNS(ns, 'polygon');
+  poly.setAttribute('points', q.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '));
+  poly.setAttribute('fill', colors.fill);
+  poly.setAttribute('stroke', colors.stroke);
+  poly.setAttribute('stroke-width', strokeWidth);
+  poly.setAttribute('stroke-linejoin', 'round');
+  g.appendChild(poly);
+
+  // Arcs at v0 and v2 (acute vertices)
+  const side = Math.hypot(q[1][0] - q[0][0], q[1][1] - q[0][1]);
+  const tmpl = r.type === 1 ? THICK_TEMPLATE : THIN_TEMPLATE;
+
+  for (let ai = 0; ai < 2; ai++) {
+    const vi = ai * 2;
+    const V = q[vi], prev = q[(vi + 3) % 4], next = q[(vi + 1) % 4];
+    const dP = vsub(prev, V), lP = Math.hypot(dP[0], dP[1]);
+    const dN = vsub(next, V), lN = Math.hypot(dN[0], dN[1]);
+    const rad = tmpl.arcRadii[ai] * side;
+    const P1 = vadd(V, vscale(dP, rad / lP));
+    const P2 = vadd(V, vscale(dN, rad / lN));
+    const cr = (P1[0] - V[0]) * (P2[1] - V[1]) - (P1[1] - V[1]) * (P2[0] - V[0]);
+    const d = `M${P1[0].toFixed(1)},${P1[1].toFixed(1)} A${rad.toFixed(1)},${rad.toFixed(1)} 0 0 ${cr > 0 ? 1 : 0} ${P2[0].toFixed(1)},${P2[1].toFixed(1)}`;
+
+    // Base arc (dim)
+    const base = document.createElementNS(ns, 'path');
+    base.setAttribute('d', d);
+    base.setAttribute('fill', 'none');
+    base.setAttribute('stroke', tmpl.arcColor);
+    base.setAttribute('stroke-width', Math.max(strokeWidth * 0.8, 0.5));
+    base.setAttribute('stroke-linecap', 'round');
+    base.style.pointerEvents = 'none';
+    g.appendChild(base);
+
+    // Bright arc (signal overlay)
+    const bright = document.createElementNS(ns, 'path');
+    bright.setAttribute('d', d);
+    bright.setAttribute('fill', 'none');
+    bright.setAttribute('stroke', r.type === 1 ? '#ffd060' : '#60c0ff');
+    bright.setAttribute('stroke-width', Math.max(strokeWidth * 1.5, 1));
+    bright.setAttribute('stroke-linecap', 'round');
+    bright.setAttribute('filter', 'url(#glow)');
+    bright.setAttribute('opacity', '0');
+    bright.style.pointerEvents = 'none';
+    g.appendChild(bright);
+
+    arcs.push({
+      el: bright,
+      baseEl: base,
+      rhombIdx,
+      arcIdx: ai,
+      P1, P2,
+      type: r.type,
+    });
+  }
+
+  return g;
+}
+
+// ================================================================
+// Build tiling: single thick rhomb → L4
+// ================================================================
+// L0: single thick rhomb (seed)
+const L0_verts = THICK_TEMPLATE.verts;
+
+// Subdivide to desired level
+const LEVEL = 8;
+let level = [makeRhomb(1, L0_verts[1], L0_verts[0], L0_verts[3], L0_verts[2], false)];
+for (let i = 0; i < LEVEL; i++) level = subdivideRhombs(level);
+
+// ================================================================
+// Draw
+// ================================================================
+const rhombColors = {
+  1: { fill: 'rgba(55,48,30,0.4)', stroke: 'rgba(240,200,80,0.1)' },
+  0: { fill: 'rgba(25,38,60,0.4)', stroke: 'rgba(100,180,255,0.1)' },
+};
+
+for (let i = 0; i < level.length; i++) {
+  svg.appendChild(drawRhomb(level[i], rhombColors[level[i].type], 0.8, i));
+}
+
+// ================================================================
+// Signal system
+// ================================================================
+
+// Build endpoint connectivity: vkey(point) → [{arcIdx, end}]
+function scrVkey(p) {
+  return Math.round(p[0]).toFixed(0) + ',' + Math.round(p[1]).toFixed(0);
+}
+
+const endpointMap = new Map();
+for (let i = 0; i < arcs.length; i++) {
+  const a = arcs[i];
+  for (const end of ['P1', 'P2']) {
+    const k = scrVkey(a[end]);
+    if (!endpointMap.has(k)) endpointMap.set(k, []);
+    endpointMap.get(k).push({ arcIdx: i, end });
+  }
+}
+
+// Get arc path length (compute once)
+for (const a of arcs) {
+  a.length = a.el.getTotalLength();
+}
+
+// Find the connected arc at an endpoint
+function getConnected(arcIdx, end) {
+  const a = arcs[arcIdx];
+  const k = scrVkey(a[end]);
+  const matches = endpointMap.get(k);
+  if (!matches) return null;
+  for (const m of matches) {
+    if (m.arcIdx === arcIdx) continue;
+    // Signal enters neighbor from the matching endpoint
+    return { arcIdx: m.arcIdx, enterEnd: m.end };
+  }
+  return null;
+}
+
+// Precompute wires: connected components of arcs via endpoints
+const wireOf = new Int32Array(arcs.length).fill(-1);
+let wireCount = 0;
+
+for (let i = 0; i < arcs.length; i++) {
+  if (wireOf[i] >= 0) continue;
+  const wid = wireCount++;
+  // BFS along connected arcs
+  const queue = [i];
+  wireOf[i] = wid;
+  while (queue.length) {
+    const cur = queue.shift();
+    for (const end of ['P1', 'P2']) {
+      const conn = getConnected(cur, end);
+      if (conn && wireOf[conn.arcIdx] < 0) {
+        wireOf[conn.arcIdx] = wid;
+        queue.push(conn.arcIdx);
+      }
+    }
+  }
+}
+
+// Build wire → arc indices lookup
+const wires = Array.from({ length: wireCount }, () => []);
+for (let i = 0; i < arcs.length; i++) wires[wireOf[i]].push(i);
+
+// Rhomb → wire indices
+const rhombWires = new Map();
+for (let i = 0; i < arcs.length; i++) {
+  const ri = arcs[i].rhombIdx;
+  if (!rhombWires.has(ri)) rhombWires.set(ri, new Set());
+  rhombWires.get(ri).add(wireOf[i]);
+}
+
+// Hover: light up whole wire
+let hoveredWires = new Set();
+
+svg.addEventListener('mouseover', e => {
+  const g = e.target.closest('g[data-idx]');
+  if (!g) return;
+  const ri = parseInt(g.dataset.idx);
+  const rw = rhombWires.get(ri);
+  if (!rw || setsEqual(rw, hoveredWires)) return;
+  clearHover();
+  hoveredWires = rw;
+  for (const wid of rw) {
+    for (const ai of wires[wid]) {
+      arcs[ai].baseEl.setAttribute('stroke', arcs[ai].type === 1 ? '#ffd060' : '#60c0ff');
+      arcs[ai].baseEl.setAttribute('stroke-width', '1.5');
+      arcs[ai].baseEl.setAttribute('filter', 'url(#glow)');
+    }
+  }
+});
+
+svg.addEventListener('mouseout', e => {
+  const g = e.target.closest('g[data-idx]');
+  if (g) return; // still inside a rhomb
+  clearHover();
+});
+
+function clearHover() {
+  for (const wid of hoveredWires) {
+    for (const ai of wires[wid]) {
+      const tmpl = arcs[ai].type === 1 ? THICK_TEMPLATE : THIN_TEMPLATE;
+      arcs[ai].baseEl.setAttribute('stroke', tmpl.arcColor);
+      arcs[ai].baseEl.setAttribute('stroke-width', '0.5');
+      arcs[ai].baseEl.removeAttribute('filter');
+    }
+  }
+  hoveredWires = new Set();
+}
+
+function setsEqual(a, b) {
+  if (a.size !== b.size) return false;
+  for (const v of a) if (!b.has(v)) return false;
+  return true;
+}
+
+// Active signals
+const signals = [];
+const SIGNAL_SPEED = 0.12; // pixels per ms
+const DASH_WIDTH = 0.15;    // fraction of arc length
+
+// Click → spawn signals from center of both arcs
+svg.addEventListener('click', e => {
+  const g = e.target.closest('g[data-idx]');
+  if (!g) return;
+  const ri = parseInt(g.dataset.idx);
+
+  // Find arcs belonging to this rhomb, spawn signals from center
+  for (let ai = 0; ai < arcs.length; ai++) {
+    if (arcs[ai].rhombIdx !== ri) continue;
+    signals.push({ arcIdx: ai, pos: 0.5, dir: +1 });
+    signals.push({ arcIdx: ai, pos: 0.5, dir: -1 });
+  }
+});
+
+// Animation
+let lastTime = 0;
+
+function animate(time) {
+  const dt = lastTime ? time - lastTime : 0;
+  lastTime = time;
+
+  // Move signals
+  for (let i = signals.length - 1; i >= 0; i--) {
+    const s = signals[i];
+    s.pos += s.dir * SIGNAL_SPEED * dt / arcs[s.arcIdx].length;
+
+    // Crossed an endpoint?
+    if (s.pos > 1) {
+      const conn = getConnected(s.arcIdx, 'P2');
+      if (conn) {
+        // Enter neighbor: if entering from P1, go toward P2 (+1); from P2, go toward P1 (-1)
+        const enterPos = conn.enterEnd === 'P1' ? 0 : 1;
+        const enterDir = conn.enterEnd === 'P1' ? +1 : -1;
+        signals.push({ arcIdx: conn.arcIdx, pos: enterPos, dir: enterDir });
+      }
+      signals.splice(i, 1);
+      continue;
+    }
+    if (s.pos < 0) {
+      const conn = getConnected(s.arcIdx, 'P1');
+      if (conn) {
+        const enterPos = conn.enterEnd === 'P1' ? 0 : 1;
+        const enterDir = conn.enterEnd === 'P1' ? +1 : -1;
+        signals.push({ arcIdx: conn.arcIdx, pos: enterPos, dir: enterDir });
+      }
+      signals.splice(i, 1);
+      continue;
+    }
+  }
+
+  // Annihilate: signals on same arc that are CONVERGING and overlap
+  for (let i = 0; i < signals.length; i++) {
+    for (let j = i + 1; j < signals.length; j++) {
+      const a = signals[i], b = signals[j];
+      if (a.arcIdx !== b.arcIdx) continue;
+      if (a.dir === b.dir) continue;
+      // Only annihilate if converging: the one moving right is LEFT of the one moving left
+      const rightward = a.dir > 0 ? a : b;
+      const leftward = a.dir > 0 ? b : a;
+      if (rightward.pos < leftward.pos && leftward.pos - rightward.pos < DASH_WIDTH) {
+        signals.splice(j, 1);
+        signals.splice(i, 1);
+        i--;
+        break;
+      }
+    }
+  }
+
+  // Render: compute intensity per arc from all signals
+  const intensities = new Float32Array(arcs.length);
+  for (const s of signals) {
+    intensities[s.arcIdx] = Math.max(intensities[s.arcIdx], 1);
+  }
+
+  // Render signals as dashes on arc paths
+  for (let i = 0; i < arcs.length; i++) {
+    const a = arcs[i];
+    const sigs = signals.filter(s => s.arcIdx === i);
+
+    if (sigs.length === 0) {
+      a.el.setAttribute('opacity', '0');
+      a.el.removeAttribute('stroke-dasharray');
+      continue;
+    }
+
+    const len = a.length;
+    const hw = DASH_WIDTH / 2 * len; // half-width in px
+
+    // Build segments: sorted non-overlapping dash ranges
+    const ranges = [];
+    for (const s of sigs) {
+      const center = s.pos * len;
+      ranges.push([Math.max(0, center - hw), Math.min(len, center + hw)]);
+    }
+    ranges.sort((a, b) => a[0] - b[0]);
+
+    // Build SVG dasharray: gap dash gap dash ...
+    let parts = [];
+    let cursor = 0;
+    for (const [start, end] of ranges) {
+      if (start > cursor) parts.push(0, start - cursor); // gap
+      parts.push(end - start, 0); // dash
+      cursor = end;
+    }
+    if (cursor < len) parts.push(0, len - cursor); // final gap
+
+    a.el.setAttribute('stroke-dasharray', parts.map(v => v.toFixed(1)).join(' '));
+    a.el.setAttribute('opacity', '0.9');
+  }
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+// Labels
+const labelG = document.createElementNS(ns, 'g');
+const labels = [
+  { text: 'L' + LEVEL + ' — Penrose P3', x: 20, y: H - 20, color: 'rgba(200,210,230,0.5)' },
+];
+for (const l of labels) {
+  const t = document.createElementNS(ns, 'text');
+  t.setAttribute('x', l.x); t.setAttribute('y', l.y);
+  t.setAttribute('fill', l.color);
+  t.setAttribute('font-size', '12'); t.setAttribute('font-family', 'Courier New');
+  t.textContent = l.text;
+  labelG.appendChild(t);
+}
+svg.appendChild(labelG);
+</script>
+</body>
+</html>
