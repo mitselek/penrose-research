@@ -67,7 +67,7 @@ export interface Signal {
   conduitIdx: number
   pos: number      // 0..1 along conduit
   dir: 1 | -1
-  speed: number    // units per ms (in tiling space)
+  speed: number    // fraction of conduit per ms (level-independent)
   charge: number   // for future interaction rules
   color: string    // for rendering
   message: string  // payload

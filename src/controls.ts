@@ -50,12 +50,13 @@ export function initControls(
   const speedVal = document.getElementById('speed-val') as HTMLSpanElement
 
   // Sync slider to current config
+  // Display is speed × 1000 for human-readable values (e.g., 0.001 → "1.0")
   speedSlider.value = String(state.config.defaultSpeed)
-  speedVal.textContent = state.config.defaultSpeed.toFixed(2)
+  speedVal.textContent = (state.config.defaultSpeed * 1000).toFixed(1)
 
   const onSpeedInput = (): void => {
     state.config.defaultSpeed = parseFloat(speedSlider.value)
-    speedVal.textContent = state.config.defaultSpeed.toFixed(2)
+    speedVal.textContent = (state.config.defaultSpeed * 1000).toFixed(1)
   }
   speedSlider.addEventListener('input', onSpeedInput)
 

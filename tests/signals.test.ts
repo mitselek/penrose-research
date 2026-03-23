@@ -138,16 +138,15 @@ describe('spawnSignals', () => {
 // ---------- moveSignals ----------
 
 describe('moveSignals', () => {
-  it('advances position by dir * speed * dt / length', () => {
+  it('advances position by dir * speed * dt (fraction of conduit per ms)', () => {
     const state = makeState(0)
     spawnSignals(state, spawnEvent(0))
     // Take only the +1 direction signal on conduit 0
     const sig = state.signals.find(s => s.dir === 1)!
-    const conduit = state.conduits[sig.conduitIdx]
     const startPos = sig.pos
     const dt = 100
     moveSignals(state, dt)
-    const expectedPos = startPos + 1 * sig.speed * dt / conduit.length
+    const expectedPos = startPos + 1 * sig.speed * dt
     expect(sig.pos).toBeCloseTo(expectedPos, 10)
   })
 

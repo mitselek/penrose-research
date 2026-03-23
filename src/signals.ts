@@ -44,8 +44,7 @@ export function spawnSignals(state: SimState, event: SimEvent): void {
 
 export function moveSignals(state: SimState, dt: number): void {
   for (const s of state.signals) {
-    const conduit = state.conduits[s.conduitIdx]
-    s.pos += s.dir * s.speed * dt / conduit.length
+    s.pos += s.dir * s.speed * dt
   }
 }
 
