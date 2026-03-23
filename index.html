@@ -15,7 +15,7 @@ g[data-idx].selected polygon{stroke:rgba(255,255,255,0.6)!important;stroke-width
 #stats .val{color:rgba(200,210,230,0.9)}
 #controls{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:rgba(8,12,20,0.85);border:1px solid rgba(160,180,200,0.15);border-radius:4px;padding:8px 16px}
 #controls label{color:rgba(200,210,230,0.5);font-size:12px;font-family:'Courier New',monospace;letter-spacing:1px;text-transform:uppercase}
-#controls input[type=range]{-webkit-appearance:none;width:140px;height:2px;background:rgba(160,175,200,0.2);outline:none;cursor:pointer}
+#controls input[type=range]{-webkit-appearance:none;appearance:none;width:140px;height:2px;background:rgba(160,175,200,0.2);outline:none;cursor:pointer}
 #controls input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:rgba(160,175,200,0.6);cursor:pointer}
 #controls span{color:rgba(200,210,230,0.6);font-size:12px;font-family:'Courier New',monospace;min-width:40px}
 </style>
@@ -27,6 +27,10 @@ g[data-idx].selected polygon{stroke:rgba(255,255,255,0.6)!important;stroke-width
   <label>seed rate</label>
   <input type="range" id="spawn-slider" min="200" max="5000" value="1000" step="100">
   <span id="spawn-val">1.0s</span>
+  <div style="width:1px;height:16px;background:rgba(160,180,200,0.15);margin:0 4px"></div>
+  <label>speed</label>
+  <input type="range" id="speed-slider" min="0.02" max="0.5" value="0.12" step="0.01">
+  <span id="speed-val">0.12</span>
 </div>
 <script src="penrose.js"></script>
 <script>
@@ -270,7 +274,7 @@ function setsEqual(a, b) {
 
 // Active signals
 const signals = [];
-const SIGNAL_SPEED = 0.12; // pixels per ms
+let SIGNAL_SPEED = 0.12; // pixels per ms
 const DASH_WIDTH = 0.15;    // fraction of arc length
 
 // Continuous signal generation under mouse
@@ -283,6 +287,13 @@ const spawnVal = document.getElementById('spawn-val');
 spawnSlider.addEventListener('input', () => {
   SPAWN_INTERVAL = parseInt(spawnSlider.value);
   spawnVal.textContent = (SPAWN_INTERVAL / 1000).toFixed(1) + 's';
+});
+
+const speedSlider = document.getElementById('speed-slider');
+const speedVal = document.getElementById('speed-val');
+speedSlider.addEventListener('input', () => {
+  SIGNAL_SPEED = parseFloat(speedSlider.value);
+  speedVal.textContent = SIGNAL_SPEED.toFixed(2);
 });
 
 document.addEventListener('keydown', e => {

@@ -27,6 +27,7 @@
 In this codebase, `TAU = 1/PHI ≈ 0.618` (reciprocal of the golden ratio). This is NOT the circle constant `2π ≈ 6.283` and NOT the golden ratio itself `φ ≈ 1.618`.
 
 Three competing conventions exist in mathematics:
+
 - τ = φ ≈ 1.618 (European mathematical tradition)
 - τ = 1/φ ≈ 0.618 (this project — subdivision scaling factor)
 - τ = 2π ≈ 6.283 (Tau Manifesto, modern programming)
@@ -37,7 +38,7 @@ See `docs/tau-disambiguation.md` for full context. All code, tests, and document
 
 ## Module Structure
 
-```
+```text
 src/
   types.ts            # All interfaces (sim types + renderer types)
   geometry.ts         # Vec2 ops, constants (PHI, TAU, sin/cos)
@@ -64,20 +65,20 @@ tests/
 
 ## Module Ownership
 
-| Module | Owner | Notes |
-|---|---|---|
-| `types.ts` | Ammann | Shared types — changes require Penrose review |
-| `geometry.ts` | Ammann | Vec2 ops, constants |
-| `subdivision.ts` | Ammann | Robinson triangles, heal mechanics |
-| `tiling.ts` | Ammann | buildTiling, tile construction loop |
-| `wiring.ts` | Bruijn | WiringStrategy, p3ArcWiring |
-| `signals.ts` | Bruijn | Signal movement, propagation, annihilation |
-| `simulation.ts` | Bruijn | createState, tick, queryTile, EventQueue |
-| `renderer.ts` | Escher | SVG rendering, brightness easing, glow filter |
-| `controls.ts` | Escher | User input → SimEvent[], hover-spawn timer |
-| `main.ts` | Escher | Animation loop, bootstrap |
-| `index.html` | Escher | HTML shell |
-| `tests/*` | Shechtman | All test files |
+| Module           | Owner     | Notes                                         |
+| ---------------- | --------- | --------------------------------------------- |
+| `types.ts`       | Ammann    | Shared types — changes require Penrose review |
+| `geometry.ts`    | Ammann    | Vec2 ops, constants                           |
+| `subdivision.ts` | Ammann    | Robinson triangles, heal mechanics            |
+| `tiling.ts`      | Ammann    | buildTiling, tile construction loop           |
+| `wiring.ts`      | Bruijn    | WiringStrategy, p3ArcWiring                   |
+| `signals.ts`     | Bruijn    | Signal movement, propagation, annihilation    |
+| `simulation.ts`  | Bruijn    | createState, tick, queryTile, EventQueue      |
+| `renderer.ts`    | Escher    | SVG rendering, brightness easing, glow filter |
+| `controls.ts`    | Escher    | User input → SimEvent[], hover-spawn timer    |
+| `main.ts`        | Escher    | Animation loop, bootstrap                     |
+| `index.html`     | Escher    | HTML shell                                    |
+| `tests/*`        | Shechtman | All test files                                |
 
 ## Communication Rule
 
@@ -91,11 +92,11 @@ Every message you send via SendMessage must be prepended with the current timest
 
 All persistent text output must carry the author agent's name in the format `(*PD:<AgentName>*)`.
 
-| Output type | Placement |
-|---|---|
-| Source code file | Comment at top of file: `// (*PD:<AgentName>*)` |
-| `.md` file — short block | On a new line directly below the block |
-| `.md` file — whole section by one agent | Next to the section heading |
+| Output type                             | Placement                                       |
+| --------------------------------------- | ----------------------------------------------- |
+| Source code file                        | Comment at top of file: `// (*PD:<AgentName>*)` |
+| `.md` file — short block                | On a new line directly below the block          |
+| `.md` file — whole section by one agent | Next to the section heading                     |
 
 ## Language Rules
 
@@ -124,11 +125,11 @@ All new functionality follows the **Red → Green → Refactor** cycle:
 
 ### Review Verdicts
 
-| Verdict | Meaning | Action |
-|---|---|---|
-| **RED** | Blockers present — mathematical errors, type safety violations, spec deviations, missing edge cases | Implementer must fix and re-submit |
-| **YELLOW** | Minor issues — style, naming, small improvements | Approve with notes, implementer addresses in follow-up |
-| **GREEN** | Clean, correct, spec-compliant | Merge ready |
+| Verdict    | Meaning                                                                                             | Action                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **RED**    | Blockers present — mathematical errors, type safety violations, spec deviations, missing edge cases | Implementer must fix and re-submit                     |
+| **YELLOW** | Minor issues — style, naming, small improvements                                                    | Approve with notes, implementer addresses in follow-up |
+| **GREEN**  | Clean, correct, spec-compliant                                                                      | Merge ready                                            |
 
 ## Migration Pipeline
 
@@ -166,7 +167,11 @@ Agents MUST be spawned with `run_in_background: true`.
 
 ### Personal Scratchpads
 
-Each teammate maintains a scratchpad at `memory/<your-name>.md` within the team directory.
+Each teammate maintains a scratchpad at the **absolute path**:
+
+`/home/michelek/Documents/github/mitselek/projects/penrose/.claude/teams/penrose-dev/memory/<your-name>.md`
+
+Do NOT use `~/.claude/teams/` — use the project-local team directory shown above.
 
 Keep it under 100 lines; prune stale entries.
 
@@ -181,4 +186,4 @@ Tags: `[DECISION]`, `[PATTERN]`, `[WIP]`, `[CHECKPOINT]`, `[DEFERRED]`, `[GOTCHA
 
 Team-lead shuts down last, commits memory files, pushes.
 
-(*PD:Celes*)
+(_PD:Celes_)
