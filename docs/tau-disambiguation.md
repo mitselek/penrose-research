@@ -15,11 +15,11 @@ TAU is the reciprocal of the golden ratio, used as the subdivision scaling facto
 
 The symbol τ (tau) has three different meanings across mathematics and programming:
 
-| Convention | Value | Context |
-|---|---|---|
-| τ = φ ≈ 1.618 | Golden ratio itself | European mathematical tradition, some textbooks |
-| **τ = 1/φ ≈ 0.618** | **Reciprocal of golden ratio** | **This project — subdivision scaling factor** |
-| τ = 2π ≈ 6.283 | Circle constant | Tau Manifesto, modern programming (e.g., Python's `math.tau`) |
+| Convention          | Value                          | Context                                                       |
+| ------------------- | ------------------------------ | ------------------------------------------------------------- |
+| τ = φ ≈ 1.618       | Golden ratio itself            | European mathematical tradition, some textbooks               |
+| **τ = 1/φ ≈ 0.618** | **Reciprocal of golden ratio** | **This project — subdivision scaling factor**                 |
+| τ = 2π ≈ 6.283      | Circle constant                | Tau Manifesto, modern programming (e.g., Python's `math.tau`) |
 
 The identity connecting the first two: `TAU = 1/PHI = PHI - 1 ≈ 0.618033988749895`.
 
@@ -43,9 +43,9 @@ Using `TAU = 1/PHI` as a named constant avoids repeated `1/PHI` divisions and ma
 
 ## References
 
-- [Tau (mathematics) — Wikipedia](https://en.wikipedia.org/wiki/Tau_(mathematics)) — covers all three conventions
+- [Tau (mathematics) — Wikipedia](<https://en.wikipedia.org/wiki/Tau_(mathematics)>) — covers all three conventions
 - [Golden ratio — Wikipedia](https://en.wikipedia.org/wiki/Golden_ratio) — the PHI/TAU relationship
 - [Penrose Tiling — GoldenNumber.net](https://www.goldennumber.net/penrose-tiling/) — golden ratio in Penrose tilings
 - [The Tau Manifesto](https://www.tauday.com/tau-manifesto) — the competing τ = 2π convention
 
-(*PD:Celes*)
+(_PD:Celes_)
