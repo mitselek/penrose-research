@@ -109,5 +109,47 @@
     "timestamp": "2026-03-23T21:47:06.665Z",
     "color": "orange",
     "read": true
+  },
+  {
+    "from": "team-lead",
+    "text": "[2026-03-24 00:21] Option A approved. Implement the normalized speed fix.\n\n**Your changes (signals.ts):**\n- `signals.ts:48`: change `s.pos += s.dir * s.speed * dt / conduit.length` to `s.pos += s.dir * s.speed * dt` (remove `/ conduit.length`)\n\n**After your change**, update the test in `tests/signals.test.ts` if it asserts the old formula. Actually — you can't edit tests (Shechtman's domain). If tests break, report which ones and what the new expected values should be. I'll have it handled.\n\nRun `npx vitest run` after your change and report results to team-lead.",
+    "summary": "Approve Option A, Bruijn implement",
+    "timestamp": "2026-03-23T22:21:54.798Z",
+    "read": true
+  },
+  {
+    "from": "team-lead",
+    "text": "[2026-03-24 00:22] HOLD — do NOT edit signals.ts yet. I broke TDD protocol. Shechtman must update the tests first to reflect the new formula. Wait for his [COORDINATION].",
+    "summary": "HOLD Bruijn — TDD protocol, tests first",
+    "timestamp": "2026-03-23T22:22:35.342Z",
+    "read": true
+  },
+  {
+    "from": "team-lead",
+    "text": "[2026-03-24 00:23] Noted — you implemented before the HOLD reached you. The change is correct, and the 1 failing test is expected. Shechtman is updating it now. Stand by for GREEN confirmation.",
+    "summary": "Ack Bruijn, Shechtman fixing test",
+    "timestamp": "2026-03-23T22:23:11.950Z",
+    "read": true
+  },
+  {
+    "from": "shechtman",
+    "text": "[2026-03-24 00:23] [COORDINATION] Speed bug fix — test updated in `tests/signals.test.ts`\n\n**Changed test:** `moveSignals > advances position by dir * speed * dt (fraction of conduit per ms)` (line 141)\n\n**What changed:**\n- Old assertion: `expectedPos = startPos + 1 * sig.speed * dt / conduit.length`\n- New assertion: `expectedPos = startPos + 1 * sig.speed * dt`\n- Removed `conduit` variable lookup (no longer needed)\n- Updated test description to reflect new semantics\n\n**New expected behavior:** `moveSignals` should compute `s.pos += s.dir * s.speed * dt` — speed means \"fraction of conduit per millisecond\", no division by `conduit.length`.\n\n**Your fix in `src/signals.ts`:** Remove `/ conduit.length` from line 48, and remove the `const conduit = state.conduits[s.conduitIdx]` lookup on line 47 since it's no longer needed.\n\n**Test status:** RED (failing against current implementation). Run `npx vitest run tests/signals.test.ts` to verify.",
+    "summary": "Coordination: speed bug test changes for Bruijn",
+    "timestamp": "2026-03-23T22:23:54.366Z",
+    "color": "purple",
+    "read": true
+  },
+  {
+    "from": "team-lead",
+    "text": "[2026-03-24 00:24] Shechtman's test is RED. You have the [COORDINATION]. Re-apply the formula change in signals.ts:48 — remove `/ conduit.length`. Run `npx vitest run` and report GREEN.",
+    "summary": "Bruijn — test RED, implement now",
+    "timestamp": "2026-03-23T22:24:15.872Z",
+    "read": true
+  },
+  {
+    "from": "team-lead",
+    "text": "{\"type\":\"shutdown_request\",\"requestId\":\"shutdown-1774310699438@bruijn\",\"from\":\"team-lead\",\"reason\":\"Session complete. Full modularization done, speed bug fixed, 218 tests GREEN. Well done.\",\"timestamp\":\"2026-03-24T00:04:59.438Z\"}",
+    "timestamp": "2026-03-24T00:04:59.438Z",
+    "read": true
   }
 ]

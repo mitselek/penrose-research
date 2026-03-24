@@ -113,5 +113,18 @@
     "timestamp": "2026-03-23T21:53:46.852Z",
     "color": "purple",
     "read": true
+  },
+  {
+    "from": "team-lead",
+    "text": "[2026-03-24 00:24] REVIEW REQUEST — speed bug fix across 4 files\n\n**Bug:** Signal speed slider had no visible effect — all slider values produced instant signal transit because speed units (screen-space pixels/ms) were mismatched with tiling-space conduit lengths.\n\n**Fix (Option A — normalized speed):**\n1. `src/signals.ts` (Bruijn): removed `/ conduit.length` from moveSignals formula. Speed now means \"fraction of conduit per ms\" — level-independent.\n2. `tests/signals.test.ts` (Shechtman): updated movement test to expect new formula.\n3. `index.html` (Escher): slider range changed to `min=\"0.0001\" max=\"0.01\" value=\"0.001\" step=\"0.0001\"`.\n4. `src/controls.ts` (Escher): speed display shows `speed × 1000` for readability.\n\nAll 218 tests GREEN. Please review all 4 files. Send verdict to team-lead.",
+    "summary": "Review speed bug fix — 4 files",
+    "timestamp": "2026-03-23T22:24:48.047Z",
+    "read": true
+  },
+  {
+    "from": "team-lead",
+    "text": "{\"type\":\"shutdown_request\",\"requestId\":\"shutdown-1774310700854@penrose\",\"from\":\"team-lead\",\"reason\":\"Session complete. Full modularization done, speed bug fixed, 218 tests GREEN. Well done.\",\"timestamp\":\"2026-03-24T00:05:00.854Z\"}",
+    "timestamp": "2026-03-24T00:05:00.854Z",
+    "read": true
   }
 ]
