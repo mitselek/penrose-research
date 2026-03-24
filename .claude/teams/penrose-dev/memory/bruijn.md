@@ -2,8 +2,8 @@
 
 ## 2026-03-24
 
-[LEARNED] Signal speed slider bug: at L7, conduit lengths are ~0.008–0.027 in tiling space. The slider range 0.02–0.5 produces delta/frame of 12–968x (instant transit). Even defaultSpeed 0.001 crosses thin conduits in <1 frame. The formula `speed * dt / conduit.length` needs either normalized speed units or a drastically smaller range.
+[LEARNED] Signal speed bug fix (Option A — normalized speed) implemented and GREEN. Speed now means "fraction of conduit per ms" — level-independent. Formula: `s.pos += s.dir * s.speed * dt` (no division by conduit.length). Ideal slider range: 0.0001–0.01, default 0.001.
 
-[DECISION] Two viable fix approaches identified:
-1. Normalized speed (remove /conduit.length, use fraction-of-conduit per ms) — simpler, level-independent
-2. Keep tiling-space speed, recalibrate range to ~0.000002–0.0004 — preserves physics-based speed
+[DECISION] Option A chosen over Option B (recalibrate tiling-space range) because it's level-independent — same slider works at L5 or L9.
+
+[DEFERRED] Slider range in `index.html` (min=0.02, max=0.5) and `main.ts` defaultSpeed (0.001) still need recalibration to match the new normalized speed semantics. Escher's domain (controls.ts, index.html, main.ts).
